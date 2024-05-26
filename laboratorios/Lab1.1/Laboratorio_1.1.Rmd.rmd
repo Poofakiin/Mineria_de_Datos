@@ -1,0 +1,163 @@
+---
+title: 'Laboratorio 1.1: Exploración y Visualización de Datos'
+date: "Agosto 2022"
+author: "Andrés Abeliuk, Hernán Sarmiento, Cinthia Sánchez, Jorge Ortiz"
+output:
+  html_document:
+    theme: default
+    toc: no
+  pdf_document:
+    toc: no
+---
+
+# Declaración de compromiso ético
+
+Nosotros **Benjamin Aguilar Osorio** y **Felipe Keim Martinez**, declaramos que realizamos de manera grupal los pasos de la presente actividad. También declaramos no incurrir en copia, ni compartir nuestras respuestas con otras personas ni con otros grupos. Por lo que, ratificamos que las respuestas son de nuestra propia confección y reflejan nuestro propio conocimiento.
+
+# Instrucciones
+
+1.  Trabajen en equipos de dos personas. Salvo excepciones, no se corregirá entregas con menos de dos integrantes.
+
+2.  Modifique este archivo `.Rmd` agregando sus respuestas donde corresponda.
+
+3.  Para cada pregunta, cuando corresponda, **incluya el código fuente que utilizó para llegar a su respuesta**.
+
+4.  El formato de entrega para esta actividad es un archivo html. **Genere un archivo HTML usando RStudio** y súbalo a U-Cursos.
+
+Basta con que uno de los integrantes haga la entrega. Si ambos hacen una entrega en U-Cursos, se revisará cualquiera de éstas.
+
+# Laboratorio
+
+La primera parte de esta actividad son preguntas teóricas que avanzaron en las clases del curso de Minería de datos.
+
+## Teoría
+
+Se esperan respuestas breves y concisas, descritas con sus propias palabras según sus conocimientos y lo visto en clase. En caso de incluir alguna referencia externa, debe citarla.
+
+
+*1. ¿Cuál es el objetivo de la Minería de datos y qué la diferencia de Machine Learning? Dé un ejemplo para explicar la diferencia.*
+
+**Respuesta:**
+
+*2. Explique qué son los métodos predictivos y descriptivos en minería de datos. Dé dos ejemplos de técnicas para cada caso y explique su utilidad.*
+
+**Respuesta:**
+
+
+
+## Práctica
+
+En esta parte de la actividad se trabajará con un dataset de evaluación de vehículos. Este contiene siete atributos: buying, maint, doors, persons, lug_boot, safety, class (variable de interés). Se recomienda leer la documentación del dataset para conocer la definición de los atributos y tener más contexto: https://archive.ics.uci.edu/ml/datasets/Car+Evaluation
+
+Para cargar los datos, use:
+
+```{r}
+data_tf <- read.csv("https://archive.ics.uci.edu/ml/machine-learning-databases/car/car.data", header=FALSE,
+                    col.names = c("buying", "maint", "doors", "persons", "lug_boot", "safety", "class"))
+```
+
+
+
+**Por cada pregunta adjunte el código R que utilizó para llegar a la respuesta. Respuestas sin código no recibirán puntaje.**
+
+### Exploración básica
+
+1.  ¿Cuáles son las dimensiones del dataset (filas, columnas)? 
+
+```{r}
+data_size<-dim(data_tf)
+data_size
+```
+
+2.  ¿Qué describe cada línea del dataset? (ejemplifique tomando la fila 10)
+
+```{r}
+#Entrega la fila 10 en su totalidad
+data_tf[10:10,]
+```
+Cada fila del dataset determina los distintos atributos relacionados a un tipo de auto, donde estos son:
+
+buying:Describe la rentabilidad del precio de compra del auto encasillandolos en los siguientes valores[ vhigh, high, med, low]. En el caso de la fila 10, buying:vhigh, es decir el auto tiene un costo de compra muy elevado 
+
+maint: Describe el precio de mantenimiento del auto, encasillandolo en los siguientes valores [vhigh, high, med, low]. En el caso de la fila 10, maint:vhigh, es decir el auto tiene un costo de mantenimiento muy elevado
+
+doors: Da el valor de la cantidad de puertas que posee el auto, donde se pueden tomar los siguientes valores[2,3,4,5more]. En el caso de la fila 10, doors:2,es decir el auto tiene 2 puertas
+
+persons: Da el valor de la capacidad(de personas) del auto, donde se pueden tomar los siguientes valores[2,4,more]. E el caso de la fila 10, persons:2, es decir el auto tiene capacidad de 2 personas
+
+lug_boot: Describe el tamaño del maletero del auto, donde se pueden tomar los siguientes valores[small, med, big]. En el caso de la fila 10, lug_bot:small
+
+3.  ¿Existen registros duplicados en el dataset? 
+
+```{r}
+# RESPUESTA
+
+
+```
+
+4.  ¿Hay valores nulos en el dataset?
+
+
+```{r}
+# RESPUESTA
+
+
+```
+
+
+### Análisis
+
+1.  Liste los valores únicos del atributo `class`.
+
+```{r}
+# RESPUESTA
+
+2 2a
+
+
+```
+
+
+2.  Liste los vehículos que tienen más de 3 puertas (`doors`). Use la función head() para mostrar los primeros ejemplos que cumplen dicha condición. Recuerde revisar los tipos de datos. 
+
+```{r}
+# RESPUESTA
+
+
+```
+
+3.  ¿Cuántos registros hay en cada categoría de la variable `safety`?.
+
+
+```{r}
+# RESPUESTA
+
+
+
+```
+
+4.  ¿De qué tipo/s (`class`) son los vehículos más caros? Considere tanto el precio de compra, como el precio de mantenimiento. Nota: 'vhigh' son los más caros. 
+
+```{r}
+# RESPUESTA
+caros <- data_tf[(data_tf$buying == "vhigh" & data_tf$maint=="vhigh"),]
+caros <- caros["class"]
+aggregate(caros$class, by=list(caros$class), FUN=length)
+unique(caros$class)
+```
+
+
+5.  Genere al menos un gráfico que le permita explorar el dataset. Agregue un título y etiquetas necesarias para que la visualización se entienda por sí misma. Comente sus principales observaciones. Nota: Si aplica alguna técnica de pre-procesamiento de datos, debe describirla.  
+
+```{r}
+#RESPUESTA
+library(ggplot2)
+class_quantity<-aggregate(data_tf$class,by=list(data_tf$class), FUN=length)
+ggplot(class_quantity)+
+  geom_bar(aes(x = Group.1, y = x), stat="identity")+
+  coord_flip()+
+    ggtitle("Cantidad de automoviles por clase") + # título
+  xlab("Clase (descripción)") + ylab("Frecuencia (cantidad)")
+
+
+```

@@ -1,0 +1,164 @@
+---
+title: "Laboratorio 4 - Reglas de Asociación en R"
+author: "Cuerpo docente: Andres Abeliuk, Hernán Sarmiento, Cinthia Sánchez, Jorge Ortiz"
+date: "Noviembre 2022"
+output: 
+  html_document: 
+    theme: cosmo
+    toc: yes
+editor_options: 
+  markdown: 
+    wrap: sentence
+---
+
+# Declaración de compromiso ético
+
+Nosotros **Benjamín Aguilar Osorio y Felipe Keim Martínez**, declaramos que realizamos de manera grupal los pasos de la presente actividad.
+También declaramos no incurrir en copia, ni compartir nuestras respuestas con otras personas ni con otros grupos.
+Por lo que, ratificamos que las respuestas son de nuestra propia confección y reflejan nuestro propio conocimiento.
+
+# Instrucciones
+
+1.  Trabajen en equipos de dos personas.
+    Salvo excepciones, no se corregirán las entregas con menos de dos integrantes.
+
+2.  Modifique este archivo `.Rmd` agregando sus respuestas donde corresponda.
+
+3.  Para cada pregunta, cuando corresponda, **incluya el código fuente que utilizó para llegar a su respuesta**.
+
+4.  El formato de entrega es un archivo html.
+    **Genere un archivo HTML usando RStudio** y súbalo a U-Cursos.
+    Basta con que uno de los integrantes haga la entrega.
+    Si ambos hacen una entrega en U-Cursos, se revisará cualquiera de estas.
+
+# Laboratorio
+
+La primera parte de esta actividad son preguntas teóricas que avanzaron en las clases del curso de Minería de datos.
+
+Para la presente actividad usaremos un dataset extenso llamado `Groceries`.
+
+```{r, eval=T}
+library("arules")
+library("arulesViz")
+
+data(Groceries)
+inspect(head(Groceries))
+```
+
+## Parte 1: Dataset Groceries
+
+**1.1** Usando el dataset `Groceries`, indique cuáles son las reglas (no itemsets) que aparecen más de un 2% en el dataset.
+Muestre las top 5 ordenadas de mayor a menor por cantidad de ocurrencias.
+Adjunte código.
+
+Nota: use `confidence=0.3`.
+
+```{r}
+reglas<- apriori(Groceries, parameter=list(support=0.02, confidence=0.3))
+
+```
+```{r}
+reglas.sorted<- sort(reglas, by="support")
+reglas.sorted.first5<-head(reglas.sorted,5)
+inspect(reglas.sorted.first5)
+```
+Respuesta: Así, las 5 reglas con mayor cantidad de ocurrencias son:
+
+- {other vegetables}    =>    {whole milk}
+- {rolls/buns}    =>    {whole milk}
+- {yogurt}    =>    {whole milk}
+- {root vegetables}    =>    {whole milk}
+- {root vegetables}    =>    {other vegetables}
+
+**1.2** Muestre 10 reglas de asociación que podrían generar una mayor venta en el supermercado.
+Emplee *Apriori* con `confidence=0.3` y que la regla aparezca en al menos un 2% del dataset.
+Fundamente su respuesta en base a los resultados y adjunte código.
+
+```{r}
+reglas.sorted<- sort(reglas, by="lift")
+reglas.sorted.first10<-head(reglas.sorted,10)
+inspect(reglas.sorted.first10)
+
+```
+Respuesta: Estas reglas permitirían generar una mayor venta en el supermercado dado que el lift mide la correlación entre distintoss itemsets, de forma que a partir de las reglas con alta correlación se pueden generar campañas de publicidad en base a estas. Por ejemplo, se pueden colocar los productos dentro de cada regla en el mismo sector del supermercado, o se pueden aplicar descuentos por comprar el itemset completo.
+
+**1.3** El siguiente gráfico muestra las reglas obtenidas con Apriori con minSup=0.01 y minConf=0.1.
+Describa tres observaciones a partir del gráfico (por ejemplo: "la mayoría de las reglas tienen soporte menor a 0.05").
+
+Respuesta: 
+1-Se genera una nube de puntos concentrada en el sector izquierdo del gráfico (support < 0,1), la cuál tiene reglas con variados valores de lift y de confidence. Sin embargo, el sector derecho (support > 0,1) contiene reglas de asociación de la forma {} => {itemset} y todas tienen un lift igual a 1.
+Estas últimas reglas no se consideran de utilidad puesto que solo están dadas por itemsets que tienen una gran frecuencia de aparición.
+2.- La nube de puntos a la izquierda contiene reglas de asociación con lift mayor a uno en general, lo que indica que se tienen en su mayoría, reglas con una correlación positiva entre el antecedente y el consecuente.
+3.- No se logra reconcer alguna relación entre los valores de confidence y support con el valor de lift, los datos se encuentran dispersos relativamente de forma pareja dentro de los limites mencionados en el primer punto.
+
+```{r}
+rules <- apriori(Groceries, parameter=list(support=0.01, confidence=0.1))
+plot(rules,engine = "plotly")
+```
+
+**R:**
+
+## Parte 2: Conceptual
+
+**2.1** ¿Qué significa que la regla `{chocolate, shopping bags} => {cake bar}`, tenga un `confidence` de $1$?
+Explique.
+
+**R: El confidence de una regla X->Y se puede asimilar a la probabilidad de ocurrencia de Y dado que ocurrió X, es decir una probabilidad condicional.**
+
+**Para este caso al tener un confidence = 1, implicará que cada vez que se realice una transacción que contenga {chocolate, shopping bags}, siempre aparecerá {cake bar}.**
+
+**Hay que mencionar de igual forma que para conjuntos de datos con pocos valores, estos valores de confidence pueden no dar gran información, ya que valores de confidence tan altos como este podrían deberse a una simple casualidad.**
+
+**2.2** ¿Qué significa que la regla `{processed cheese, white bread} => {ham}` tenga un lift de $18$?
+Explique.
+
+**R: El lift de una relación se calcula como la división entre el confidence de la relación y el soporte del lado derecho de esta,  normalmente para valores de lift>1, se espera que exista una relación que haga que los productos de la izquierda sean mas frecuentes al tener los productos de la derecha.**
+
+**En este caso al tener un lift 18, podemos asumir que la probabilidad de compra de ham aumenta en gran medida al tener la información de la compra de {processed cheese, white bread}.**
+
+**2.3** Explique el Algoritmo Apriori para encontrar/generar itemsets frecuentes.
+
+**R: El algoritmo se basa en el principio de que si un itemset es frecuente, entonces los subconjuntos de este itemset también lo serán, y de la misma forma, si un itemset es infrecuente, los itemset que lo contengan también lo serán. Este principio permite reducir el espacio de búsqueda de itemsets, dado que si se encuentra un itemset infrecuente, no es necesario revisar los itemsets que contengan a este.**
+
+**De esta forma, el algoritmo se explica a continuación: en primer lugar se ordenan todos los itemsets alfabéticamente. Luego se revisan los itemsets de largo uno y se filtran los que cumplan la condición de soporte, aquellos que la cumplan se combinan para obtener posibles candidatos de itemsets frecuentes de largo dos. Se aplica nuevamente el filtro y luego se combinan los itemsets que tengan su primer elemento igual, para formar posibles candidatos de itemsets de largo tres. Así se itera hasta no poder combinar más.**
+
+**2.4** Si tuviéramos la regla `{yogurt} => {coffee}`, y encontráramos que tiene `confidence` 1 ¿Podríamos decir que este es un patrón relevante sobre los datos?
+
+**R: No necesariamente, dado que puede suceder que ambos itemsets sean independientes. Esto puede ocurrir por ejemplo si {coffe} tiene un soporte muy grande, lo que indica que se compra café muchas veces, independiente de si se compra yogurt o no.**
+
+## Parte 3 : Aplicación práctica de las Reglas de Asociación
+
+**3.1** Considere las siguientes transacciones:
+
+    {audífonos, smartphone}
+    {audífonos, smartphone}
+    ...
+    {audífonos, smartphone}
+    {smartphone}
+    {smartphone}
+    ...
+    {smartphone}
+
+Ambas transacciones aparecen un mismo número de veces, es decir, `{audífonos, smartphone}` aparece 3 veces, y `{smartphone}` también aparece 3 veces.
+De este dataset extraemos las siguientes reglas:
+
+1.  `{audífonos} => {smartphone}`
+2.  `{smartphone} => {audífonos}`
+
+Analice cuál de las 2 reglas es más útil para un negocio que quiere recomendar productos a sus clientes.
+¿Qué puede decir sobre las medidas de interés de ambas reglas?
+Concluya viendo el `lift` de ambas reglas.
+
+**R:Para poder identificar cuál de las dos reglas es más útil nos ayudaremos del índice de confianza. Para la primera regla tendremos que la confianza de esta será: P(smartphone.audifono)/P(audifono), donde ambas probabilidades serán 0.5 teniendo así una confianza = 1**
+
+**Para la segunda regla tendremos que su confianza será P(audífono, smartphone)/P(smartphone), teniendo en este caso 0.5/1 es decir una confianza de 0.5.**
+
+**Basándonos en este valor podríamos recomendar el uso de la primera regla sobre la segunda.**
+
+**Por ultimo intentemos concluir observando el valor de lift, para esto recordemos que este valor se calcula como  confidence(X->Y)/support(Y).**
+
+**Para la primera regla teníamos que su confidence era 1, mientras que el support(smartphone)=1, luego su lift=1**
+
+**Para la segunda regla teníamos que su confidence era 0.5, mientras que el support(audífonos)=0.5, por lo que también su lift será 1. Lo que significa que los eventos son independientes en ambos casos**
+
+**Finalmente, notamos que las medidas de interés no entregan mayor información, esto se debe a que al tener un ítem que siempre se compre, cualquier otro ítem podrá generar una relación óptima con respecto a este. En este caso al tener solamente 2 items no se puede generar un mayor conocimiento puesto que uno de estos (el smartphone) siempre se comprará.**
